@@ -1,0 +1,39 @@
+# URL Shortener — To-Do
+
+## Setup
+- [ ] Java-Projekt anlegen (Maven oder Gradle)
+- [ ] Datenbankverbindung konfigurieren (SQLite)
+- [ ] Tabellen erstellen (siehe Datenmodell unten)
+
+## Datenmodell
+- [ ] `users` — `id`, `email`, `password_hash`, `created_at`
+- [ ] `links` — `id`, `short_code`, `original_url`, `user_id` (NULL = anonym), `created_at`
+- [ ] `link_clicks` — `id`, `link_id`, `clicked_at`, `referrer`, `country` (optional)
+
+## Algorithmus
+- [ ] Base62-Lookup-Tabelle definieren (`0-9`, `A-Z`, `a-z`)
+- [ ] Auto-Inkrement-ID per Modulo in Base62 umrechnen
+
+## Benutzerkonten
+- [ ] `POST /register` — E-Mail + Passwort, Passwort gehasht speichern (bcrypt)
+- [ ] `POST /login` — Session oder JWT zurückgeben
+- [ ] `POST /logout`
+- [ ] Auth-Middleware: eingeloggt oder anonym erkennen
+
+## HTTP & Datenbank
+- [ ] `POST /shorten` — funktioniert für eingeloggte Nutzer UND Anonyme
+  - [ ] Eingeloggt: `user_id` in der Datenbank speichern
+  - [ ] Anonym: `user_id` bleibt NULL
+- [ ] `GET /:code` — weiterleiten + Klick in `link_clicks` eintragen
+- [ ] Einfache URL-Validierung
+
+## Statistiken (nur für eingeloggte Nutzer)
+- [ ] `GET /stats/:code` — Klickanzahl, erste/letzte Klick-Zeit zurückgeben
+- [ ] Zugriff nur erlauben wenn `link.user_id == eingeloggter Nutzer`
+- [ ] `GET /dashboard` — alle eigenen Links mit Klickzahlen auflisten
+
+## Testen
+- [ ] Anonymer Nutzer kann Link erstellen und weiterleiten
+- [ ] Eingeloggter Nutzer sieht Statistiken für eigene Links
+- [ ] Eingeloggter Nutzer sieht KEINE Statistiken fremder Links
+- [ ] 404 bei unbekanntem Code
