@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Builder
 @NoArgsConstructor
@@ -20,8 +19,8 @@ import java.util.UUID;
 public class Link {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     /** The Base62-encoded short code, e.g. "aB3xZ" */
     @Column(name = "short_code", unique = true, nullable = false)

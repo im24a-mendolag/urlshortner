@@ -2,10 +2,6 @@ package dev.zwazel.springintro.link;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-<parameter name="content">package dev.zwazel.springintro.link;
-
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;

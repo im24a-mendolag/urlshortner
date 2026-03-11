@@ -1,18 +1,18 @@
 # URL Shortener — To-Do
 
 ## Setup
-- [ ] Java-Projekt anlegen (Maven oder Gradle)
-- [ ] Datenbankverbindung konfigurieren (SQLite)
-- [ ] Tabellen erstellen (siehe Datenmodell unten)
+- [x] Java-Projekt anlegen (Maven oder Gradle)
+- [x] Datenbankverbindung konfigurieren (SQLite)
+- [x] Tabellen erstellen (siehe Datenmodell unten)
 
 ## Datenmodell
-- [ ] `users` — `id`, `email`, `password_hash`, `created_at`
-- [ ] `links` — `id`, `short_code`, `original_url`, `user_id` (NULL = anonym), `created_at`
-- [ ] `link_clicks` — `id`, `link_id`, `clicked_at`, `referrer`, `country` (optional)
+- [x] `users` — `id`, `email`, `password_hash`, `created_at`
+- [x] `links` — `id`, `short_code`, `original_url`, `user_id` (NULL = anonym), `created_at`
+- [x] `link_clicks` — `id`, `link_id`, `clicked_at`, `referrer`, `country` (optional)
 
 ## Algorithmus
-- [ ] Base62-Lookup-Tabelle definieren (`0-9`, `A-Z`, `a-z`)
-- [ ] Auto-Inkrement-ID per Modulo in Base62 umrechnen
+- [x] Base62-Lookup-Tabelle definieren (`0-9`, `A-Z`, `a-z`)
+- [x] Auto-Inkrement-ID per Modulo in Base62 umrechnen
 
 ## Benutzerkonten
 - [ ] `POST /register` — E-Mail + Passwort, Passwort gehasht speichern (bcrypt)
