@@ -8,6 +8,7 @@ import dev.zwazel.springintro.security.jwt.JwtService;
 import dev.zwazel.springintro.user.User;
 import dev.zwazel.springintro.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -80,15 +81,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
      */
     @Override
     public AuthenticationResponse register(RegisterRequest request) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+
+        if (userRepository.findUserByEmail(normalizedEmail).isPresent()) {
+            throw new EmailAlreadyExistsException("Email is already registered.");
+        }
+
         // Create new user with hashed password
         var user = User.builder()
-                .email(request.getEmail())
+                .email(normalizedEmail)
                 .password(passwordEncoder.encode(request.getPassword()))  // Hash password - never store plain text!
                 .role(request.getRole())  // Assign role (ADMIN or USER)
                 .build();
         
         // Persist user to database
-        user = userRepository.save(user);
+        try {
+            user = userRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            // Protect against race conditions where the same email is inserted concurrently.
+            throw new EmailAlreadyExistsException("Email is already registered.");
+        }
         
         // Generate JWT token for this user
         var jwt = jwtService.generateToken(user);

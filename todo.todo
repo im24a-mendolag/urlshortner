@@ -15,9 +15,9 @@
 - [x] Auto-Inkrement-ID per Modulo in Base62 umrechnen
 
 ## Benutzerkonten
-- [ ] `POST /register` — E-Mail + Passwort, Passwort gehasht speichern (bcrypt)
+- [x] `POST /register` — E-Mail + Passwort, Passwort gehasht speichern (bcrypt)
 - [ ] `POST /login` — Session oder JWT zurückgeben
-- [ ] `POST /logout`
+- [x] `POST /logout`
 - [ ] Auth-Middleware: eingeloggt oder anonym erkennen
 
 ## HTTP & Datenbank

@@ -2,6 +2,7 @@ package dev.zwazel.springintro.security.jwt;
 
 import dev.zwazel.springintro.security.ErrorResponse;
 import dev.zwazel.springintro.security.Role;
+import dev.zwazel.springintro.security.auth.EmailAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.Instant;
@@ -49,6 +51,24 @@ public class TokenControllerHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> handleException(HttpMessageNotReadableException ex) {
         return new ResponseEntity<>("Cannot parse JSON :: accepted roles " + Arrays.toString(Role.values()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExistsException(EmailAlreadyExistsException ex, WebRequest request) {
+        String path = request.getDescription(false);
+        if (request instanceof ServletWebRequest servletWebRequest) {
+            path = servletWebRequest.getRequest().getRequestURI();
+        }
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .error("Bad Request")
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .path(path)
+                .build();
+
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
 }
