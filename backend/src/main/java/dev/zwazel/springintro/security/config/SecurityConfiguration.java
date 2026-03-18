@@ -90,6 +90,9 @@ public class SecurityConfiguration {
                         request
                                 // Rule 1: Public endpoints (no authentication required)
                                 .requestMatchers("/error", "/api/v1/auth/**").permitAll()
+                                // Rule 1b: Public shortener endpoints (anonymous and authenticated)
+                                .requestMatchers(HttpMethod.POST, "/shorten").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/{code}").permitAll()
                                 // Rule 2: Admin-only resource creation
                                 .requestMatchers(HttpMethod.POST, "/api/v1/resource").hasRole("ADMIN")
                                 // Rule 3: Catch-all (all other endpoints require authentication)
