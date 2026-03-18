@@ -58,11 +58,11 @@ const Dashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       await api.post('/api/v1/auth/logout');
+      navigate('/', { replace: true });
       logout();
-      navigate('/login');
     } catch (err) {
+      navigate('/', { replace: true });
       logout();
-      navigate('/login');
     }
   };
 

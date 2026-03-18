@@ -89,8 +89,6 @@ const ShortenerHome: React.FC = () => {
           <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:underline">Login</Link>
           <span className="text-gray-400">|</span>
           <Link to="/register" className="text-blue-600 dark:text-blue-400 hover:underline">Register</Link>
-          <span className="text-gray-400">|</span>
-          <Link to="/dashboard" className="text-blue-600 dark:text-blue-400 hover:underline">My Dashboard</Link>
         </div>
       </div>
     </div>

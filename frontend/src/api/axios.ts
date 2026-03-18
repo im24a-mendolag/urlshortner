@@ -39,7 +39,14 @@ api.interceptors.response.use(
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
 
-      if (window.location.pathname !== '/login') {
+      const requestUrl = error.config?.url ?? '';
+      const isAuthRequest = requestUrl.includes('/api/v1/auth/');
+      const isLogoutRequest = requestUrl.includes('/api/v1/auth/logout');
+      const isAlreadyPublicPage = window.location.pathname === '/'
+        || window.location.pathname === '/login'
+        || window.location.pathname === '/register';
+
+      if (!isAuthRequest && !isLogoutRequest && !isAlreadyPublicPage) {
         redirectToLogin('Session expired. Please log in again.');
       }
     }
