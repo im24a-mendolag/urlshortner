@@ -4,6 +4,7 @@ public record LinkResponse(
         String shortCode,
         String shortUrl,
         String originalUrl,
-        long clickCount
+        long clickCount,
+        boolean disabled
 ) {
 }

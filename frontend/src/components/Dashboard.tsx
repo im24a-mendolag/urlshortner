@@ -7,6 +7,7 @@ import {
   createShortLink,
   getDashboardLinks,
   getLinkStats,
+  setLinkDisabled,
   type LinkItem,
   type LinkStats,
 } from '../api/links';
@@ -25,6 +26,7 @@ const Dashboard: React.FC = () => {
   const [selectedStats, setSelectedStats] = useState<LinkStats | null>(null);
   const [statsCode, setStatsCode] = useState<string | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [toggleInProgressCode, setToggleInProgressCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
@@ -127,6 +129,29 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleToggleDisabled = async (item: LinkItem) => {
+    setToggleInProgressCode(item.shortCode);
+    setError(null);
+    setInfoMessage(null);
+    try {
+      const updated = await setLinkDisabled(item.shortCode, !item.disabled);
+      setLinks((current) => current.map((entry) => (
+        entry.shortCode === updated.shortCode ? updated : entry
+      )));
+      setInfoMessage(updated.disabled ? 'Link disabled.' : 'Link enabled.');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || 'Could not update link status.');
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Could not update link status.');
+      }
+    } finally {
+      setToggleInProgressCode(null);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4 sm:p-8">
       <div className="w-full max-w-5xl p-8 space-y-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
@@ -223,7 +248,18 @@ const Dashboard: React.FC = () => {
                     >
                       {item.shortUrl}
                     </a>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Clicks: {item.clickCount}</span>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Clicks: {item.clickCount}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          item.disabled
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                            : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                        }`}
+                      >
+                        {item.disabled ? 'Disabled' : 'Active'}
+                      </span>
+                    </div>
                   </div>
                   <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 break-all">{item.originalUrl}</p>
                   <div className="mt-3 flex gap-3">
@@ -238,6 +274,17 @@ const Dashboard: React.FC = () => {
                       className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
                     >
                       View stats
+                    </button>
+                    <button
+                      onClick={() => void handleToggleDisabled(item)}
+                      disabled={toggleInProgressCode === item.shortCode}
+                      className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-60"
+                    >
+                      {toggleInProgressCode === item.shortCode
+                        ? 'Saving...'
+                        : item.disabled
+                          ? 'Enable'
+                          : 'Disable'}
                     </button>
                   </div>
                 </div>

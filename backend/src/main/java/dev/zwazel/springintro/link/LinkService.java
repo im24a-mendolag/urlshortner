@@ -23,31 +23,53 @@ import java.util.UUID;
 @Transactional
 public class LinkService {
 
+    // Main links table.
     private final LinkRepository linkRepository;
+    // Stores click events for each link.
     private final LinkClickRepository linkClickRepository;
+    // Needed to resolve Authentication -> User entity.
     private final UserRepository userRepository;
+    // Encodes numeric DB id into Base62 short code.
     private final Base62Encoder base62Encoder;
 
+    /**
+     * Create a new short link.
+     *
+     * Implementation detail:
+     * Link.shortCode is NOT NULL in DB, but the final short code depends on generated ID.
+     * So we save twice:
+     * 1) save with temporary shortCode
+     * 2) encode generated ID to Base62 and save final shortCode
+     */
     public LinkResponse createShortLink(String originalUrl, Authentication authentication, HttpServletRequest request) {
         if (!isValidHttpUrl(originalUrl)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid URL.");
         }
 
+        // Returns null for anonymous calls; user entity for logged-in calls.
         User currentUser = resolveCurrentUser(authentication);
 
+        // Temporary code just to satisfy NOT NULL/UNIQUE before real code exists.
         Link link = Link.builder()
                 .originalUrl(originalUrl.trim())
                 .user(currentUser)
                 .shortCode("tmp-" + UUID.randomUUID())
                 .build();
 
+        // First save creates auto-increment ID.
         link = linkRepository.save(link);
+        // Real code is Base62(ID), e.g. 62 -> "10".
         link.setShortCode(base62Encoder.encodePersistedLinkId(link));
+        // Second save persists final code.
         link = linkRepository.save(link);
 
         return toLinkResponse(link, request, 0);
     }
 
+    /**
+     * Dashboard endpoint:
+     * Return only links owned by currently authenticated user.
+     */
     @Transactional(readOnly = true)
     public List<LinkResponse> getDashboard(Authentication authentication, HttpServletRequest request) {
         User currentUser = requireAuthenticatedUser(authentication);
@@ -58,6 +80,25 @@ public class LinkService {
                 .toList();
     }
 
+    /**
+     * Enable/disable one link owned by the current user.
+     */
+    public LinkResponse setLinkDisabled(String code, boolean disabled, Authentication authentication, HttpServletRequest request) {
+        User currentUser = requireAuthenticatedUser(authentication);
+        Link link = findByShortCodeOrThrow(code);
+        requireOwnership(link, currentUser);
+
+        link.setDisabled(disabled);
+        link = linkRepository.save(link);
+
+        return toLinkResponse(link, request, linkClickRepository.countByLink(link));
+    }
+
+    /**
+     * Stats endpoint:
+     * - requires authenticated user
+     * - requires ownership of the link
+     */
     @Transactional(readOnly = true)
     public LinkStatsResponse getStatsForCode(String code, Authentication authentication) {
         User currentUser = requireAuthenticatedUser(authentication);
@@ -70,6 +111,7 @@ public class LinkService {
         List<LinkClick> clicks = linkClickRepository.findAllByLink(link);
         long clickCount = clicks.size();
 
+        // Compute first and last click timestamps from stored click events.
         var firstClick = clicks.stream()
                 .map(LinkClick::getClickedAt)
                 .min(Comparator.naturalOrder())
@@ -82,8 +124,17 @@ public class LinkService {
         return new LinkStatsResponse(link.getShortCode(), clickCount, firstClick, lastClick);
     }
 
+    /**
+     * Redirect flow:
+     * 1) resolve short code
+     * 2) record click event
+     * 3) return original URL for controller redirect
+     */
     public String resolveAndTrackRedirect(String code, HttpServletRequest request) {
         Link link = findByShortCodeOrThrow(code);
+        if (link.isDisabled()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Short code not found.");
+        }
 
         LinkClick click = LinkClick.builder()
                 .link(link)
@@ -95,11 +146,13 @@ public class LinkService {
         return link.getOriginalUrl();
     }
 
+    // Helper: load link by short code or return HTTP 404.
     private Link findByShortCodeOrThrow(String code) {
         return linkRepository.findByShortCode(code)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Short code not found."));
     }
 
+    // Helper: enforce authenticated user and convert to User entity.
     private User requireAuthenticatedUser(Authentication authentication) {
         User user = resolveCurrentUser(authentication);
         if (user == null) {
@@ -108,6 +161,13 @@ public class LinkService {
         return user;
     }
 
+    private void requireOwnership(Link link, User currentUser) {
+        if (link.getUser() == null || !link.getUser().getId().equals(currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to modify this link.");
+        }
+    }
+
+    // Helper: supports both authenticated and anonymous calls.
     private User resolveCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
@@ -121,6 +181,7 @@ public class LinkService {
         return userRepository.findUserByEmail(email).orElse(null);
     }
 
+    // Simple URL validation (http/https + host).
     private boolean isValidHttpUrl(String originalUrl) {
         if (originalUrl == null || originalUrl.isBlank()) {
             return false;
@@ -137,6 +198,7 @@ public class LinkService {
         }
     }
 
+    // Convert entity -> API DTO consumed by frontend.
     private LinkResponse toLinkResponse(Link link, HttpServletRequest request, long clickCount) {
         String shortUrl = ServletUriComponentsBuilder.fromRequestUri(request)
                 .replacePath("/{code}")
@@ -144,6 +206,6 @@ public class LinkService {
                 .buildAndExpand(link.getShortCode())
                 .toUriString();
 
-        return new LinkResponse(link.getShortCode(), shortUrl, link.getOriginalUrl(), clickCount);
+        return new LinkResponse(link.getShortCode(), shortUrl, link.getOriginalUrl(), clickCount, link.isDisabled());
     }
 }

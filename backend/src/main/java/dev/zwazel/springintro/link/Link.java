@@ -30,6 +30,11 @@ public class Link {
     @Column(name = "original_url", nullable = false, length = 2048)
     private String originalUrl;
 
+    /** If true, short code exists but redirect is blocked */
+    @Builder.Default
+    @Column(name = "disabled", nullable = false)
+    private boolean disabled = false;
+
     /** Owner of this link — NULL means it was created anonymously */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

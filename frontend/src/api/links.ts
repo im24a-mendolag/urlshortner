@@ -11,6 +11,7 @@ export interface LinkItem {
   shortUrl: string;
   originalUrl: string;
   clickCount: number;
+  disabled: boolean;
 }
 
 export interface LinkStats {
@@ -57,10 +58,6 @@ const getApiOrigin = () => {
     return removeTrailingSlash(apiBaseUrl);
   }
 
-  if (import.meta.env.DEV) {
-    return `${window.location.protocol}//${window.location.hostname}:8080`;
-  }
-
   return window.location.origin;
 };
 
@@ -73,6 +70,7 @@ export const buildShortUrlFromCode = (shortCode: string) => {
 const SHORTEN_ENDPOINT = import.meta.env.VITE_SHORTEN_ENDPOINT ?? '/shorten';
 const DASHBOARD_ENDPOINT = import.meta.env.VITE_DASHBOARD_ENDPOINT ?? '/dashboard';
 const STATS_BASE_ENDPOINT = import.meta.env.VITE_STATS_BASE_ENDPOINT ?? '/stats';
+const LINKS_BASE_ENDPOINT = import.meta.env.VITE_LINKS_BASE_ENDPOINT ?? '/links';
 
 const normalizeLinkItem = (value: unknown): LinkItem | null => {
   if (!isRecord(value)) {
@@ -86,14 +84,16 @@ const normalizeLinkItem = (value: unknown): LinkItem | null => {
     return null;
   }
 
-  const providedShortUrl = getText(value, ['shortUrl', 'short_url']);
   const clickCount = toNumber(value.clickCount ?? value.clicks ?? value.totalClicks, 0);
+  const disabled = value.disabled === true;
 
   return {
     shortCode,
-    shortUrl: providedShortUrl || buildShortUrlFromCode(shortCode),
+    // Always use frontend short-code route so not-found/disabled links show UI page.
+    shortUrl: buildShortUrlFromCode(shortCode),
     originalUrl,
     clickCount,
+    disabled,
   };
 };
 
@@ -150,6 +150,17 @@ export const getLinkStats = async (code: string): Promise<LinkStats> => {
 
   if (!normalized) {
     throw new Error('Backend response did not include valid link stats.');
+  }
+
+  return normalized;
+};
+
+export const setLinkDisabled = async (code: string, disabled: boolean): Promise<LinkItem> => {
+  const response = await api.patch(`${LINKS_BASE_ENDPOINT}/${encodeURIComponent(code)}/disabled`, { disabled });
+  const normalized = normalizeLinkItem(response.data);
+
+  if (!normalized) {
+    throw new Error('Backend response did not include a valid link item.');
   }
 
   return normalized;

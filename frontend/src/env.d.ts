@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_SHORTEN_ENDPOINT?: string;
   readonly VITE_DASHBOARD_ENDPOINT?: string;
   readonly VITE_STATS_BASE_ENDPOINT?: string;
+  readonly VITE_LINKS_BASE_ENDPOINT?: string;
 }
 
 interface ImportMeta {
