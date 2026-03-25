@@ -88,15 +88,10 @@ public class SecurityConfiguration {
                 // STEP 3: Define authorization rules (top-to-bottom evaluation, first match wins)
                 .authorizeHttpRequests(request ->
                         request
-                                // Rule 1: Public endpoints (no authentication required)
                                 .requestMatchers("/error", "/api/v1/auth/**").permitAll()
-                                // Rule 1b: Public shortener endpoints (anonymous and authenticated)
-                                .requestMatchers(HttpMethod.POST, "/shorten").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/resolve/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/shorten").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/resolve/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/{code}").permitAll()
-                                // Rule 2: Admin-only resource creation
-                                .requestMatchers(HttpMethod.POST, "/api/v1/resource").hasRole("ADMIN")
-                                // Rule 3: Catch-all (all other endpoints require authentication)
                                 .anyRequest().authenticated())
                 // STEP 4: Use stateless session policy (no server-side sessions)
                 // Each request is independent; state is in JWT token only

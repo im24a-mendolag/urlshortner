@@ -14,32 +14,6 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/shorten': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/dashboard': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/stats': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/links': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/resolve': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/chat': {
-        target: 'ws://localhost:8080',
-        ws: true,
-        changeOrigin: true,
-        rewriteWsOrigin: true,
-      },
     },
   },
 })

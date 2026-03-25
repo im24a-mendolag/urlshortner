@@ -67,10 +67,10 @@ export const buildShortUrlFromCode = (shortCode: string) => {
   return `${base}/${shortCode}`;
 };
 
-const SHORTEN_ENDPOINT = import.meta.env.VITE_SHORTEN_ENDPOINT ?? '/shorten';
-const DASHBOARD_ENDPOINT = import.meta.env.VITE_DASHBOARD_ENDPOINT ?? '/dashboard';
-const STATS_BASE_ENDPOINT = import.meta.env.VITE_STATS_BASE_ENDPOINT ?? '/stats';
-const LINKS_BASE_ENDPOINT = import.meta.env.VITE_LINKS_BASE_ENDPOINT ?? '/links';
+const SHORTEN_ENDPOINT = import.meta.env.VITE_SHORTEN_ENDPOINT ?? '/api/v1/shorten';
+const DASHBOARD_ENDPOINT = import.meta.env.VITE_DASHBOARD_ENDPOINT ?? '/api/v1/dashboard';
+const STATS_BASE_ENDPOINT = import.meta.env.VITE_STATS_BASE_ENDPOINT ?? '/api/v1/stats';
+const LINKS_BASE_ENDPOINT = import.meta.env.VITE_LINKS_BASE_ENDPOINT ?? '/api/v1/links';
 
 const normalizeLinkItem = (value: unknown): LinkItem | null => {
   if (!isRecord(value)) {

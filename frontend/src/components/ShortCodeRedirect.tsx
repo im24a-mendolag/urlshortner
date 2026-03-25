@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import api from '../api/axios';
 
-const RESERVED_CODES = new Set(['login', 'register', 'dashboard']);
+const RESERVED_CODES = new Set(['login', 'register', 'dashboard', 'api']);
 type RedirectState = 'loading' | 'not_found' | 'error';
 
 const ShortCodeRedirect: React.FC = () => {
@@ -22,7 +22,7 @@ const ShortCodeRedirect: React.FC = () => {
 
     const resolveLink = async () => {
       try {
-        const response = await api.get(`/resolve/${encodeURIComponent(code)}`);
+        const response = await api.get(`/api/v1/resolve/${encodeURIComponent(code)}`);
         const originalUrl = response.data?.originalUrl;
 
         if (typeof originalUrl === 'string' && originalUrl.trim()) {
