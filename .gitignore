@@ -33,7 +33,7 @@ build/
 ### VS Code ###
 .vscode/
 
-backend/src/main/resources/application.properties
+.env
 .claude/
 frontend/node_modules/
 frontend/dist/
