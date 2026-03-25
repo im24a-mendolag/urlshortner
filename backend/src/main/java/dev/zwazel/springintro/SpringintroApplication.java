@@ -142,14 +142,6 @@ public class SpringintroApplication {
      *             If empty, application uses defaults from application.properties.
      */
     static void main(String[] args) {
-        // Step 1: Initialize Spring Boot application
-        // SpringApplication.run() handles:
-        // - Creating Spring ApplicationContext (container for all beans)
-        // - Running auto-configuration
-        // - Scanning for @Component, @Service, @Repository, @Configuration
-        // - Creating all beans and injecting dependencies
-        // - Starting embedded Tomcat server
-        // - Making application ready to handle HTTP requests
         SpringApplication.run(SpringintroApplication.class, args);
     }
 
