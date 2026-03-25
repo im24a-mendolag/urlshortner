@@ -16,12 +16,32 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class LinkService {
+
+    /**
+     * Short codes that must never be generated because they collide with real routes.
+     * Keep this list lowercase; comparisons are done case-insensitively.
+     */
+    private static final Set<String> RESERVED_SHORT_CODES = Set.of(
+            "api",
+            "error",
+            "login",
+            "logout",
+            "register",
+            "dashboard",
+            "stats",
+            "links",
+            "shorten",
+            "resolve",
+            "v1",
+            "auth"
+    );
 
     // Main links table.
     private final LinkRepository linkRepository;
@@ -58,8 +78,8 @@ public class LinkService {
 
         // First save creates auto-increment ID.
         link = linkRepository.save(link);
-        // Real code is Base62(ID), e.g. 62 -> "10".
-        link.setShortCode(base62Encoder.encodePersistedLinkId(link));
+        // Real code is Base62(ID), e.g. 62 -> "10" (but must not collide with reserved routes).
+        link.setShortCode(generateSafeUniqueShortCode(link));
         // Second save persists final code.
         link = linkRepository.save(link);
 
@@ -207,5 +227,25 @@ public class LinkService {
                 .toUriString();
 
         return new LinkResponse(link.getShortCode(), shortUrl, link.getOriginalUrl(), clickCount, link.isDisabled());
+    }
+
+    private String generateSafeUniqueShortCode(Link persistedLink) {
+        String base = base62Encoder.encodePersistedLinkId(persistedLink);
+        String candidate = base;
+
+        int suffix = 0;
+        while (isReservedShortCode(candidate) || linkRepository.findByShortCode(candidate).isPresent()) {
+            suffix++;
+            candidate = base + base62Encoder.encode(suffix);
+        }
+
+        return candidate;
+    }
+
+    private boolean isReservedShortCode(String code) {
+        if (code == null || code.isBlank()) {
+            return true;
+        }
+        return RESERVED_SHORT_CODES.contains(code.toLowerCase());
     }
 }

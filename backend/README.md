@@ -9,12 +9,12 @@ Spring Boot backend for the URL shortener project.
   - `POST /api/v1/auth/authenticate`
   - `POST /api/v1/auth/logout`
 - Link endpoints:
-  - `POST /shorten`
-  - `GET /resolve/{code}`
+  - `POST /api/v1/shorten`
+  - `GET /api/v1/resolve/{code}`
   - `GET /{code}`
-  - `GET /dashboard`
-  - `GET /stats/{code}`
-  - `PATCH /links/{code}/disabled`
+  - `GET /api/v1/dashboard`
+  - `GET /api/v1/stats/{code}`
+  - `PATCH /api/v1/links/{code}/disabled`
 
 ## Run locally
 
@@ -40,7 +40,9 @@ Important settings:
 
 - `spring.jpa.hibernate.ddl-auto=update`
   - Keeps local data between restarts.
-- Database URL/credentials are set in that file.
+- Database URL/credentials and JWT settings can be provided via environment variables:
+  - `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
+  - `JWT_SECRET_KEY`, `JWT_EXPIRATION`, `JWT_COOKIE_NAME`, `JWT_COOKIE_MAX_AGE`
 
 ## Data model summary
 
