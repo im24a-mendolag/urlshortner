@@ -1,159 +1,349 @@
 {
   "info": {
     "_postman_id": "2cd603a9-149a-4e6c-82ef-5f981eb797b0",
-    "name": "Spring",
+    "name": "URL Shortener (Spring)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "49459827"
   },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "email", "value": "student1@example.com" },
+    { "key": "password", "value": "StrongP@ssw0rd!" },
+    { "key": "token", "value": "" },
+    { "key": "shortCode", "value": "" }
+  ],
   "item": [
     {
-      "name": "security",
+      "name": "Auth",
       "item": [
         {
-          "name": "register",
+          "name": "Register",
           "request": {
             "auth": {
               "type": "noauth"
             },
             "method": "POST",
-            "header": [],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"email\":\"student1@example.com\",\r\n    \"password\":\"StrongP@ssw0rd!\",\r\n    \"role\":\"ADMIN\"\r\n}",
+              "raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"{{password}}\",\r\n  \"role\": \"USER\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "url": {
-              "raw": "localhost:8080/api/v1/auth/register",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "register"
-              ]
-            }
+            "url": "{{baseUrl}}/api/v1/auth/register"
           },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('register: status is 200/201', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  const token = json?.access_token || json?.accessToken;",
+                  "  if (typeof token === 'string' && token.length > 0) {",
+                  "    pm.collectionVariables.set('token', token);",
+                  "  }",
+                  "} catch (_) {}"
+                ]
+              }
+            }
+          ],
           "response": []
         },
         {
-          "name": "admin resource",
+          "name": "Authenticate (login)",
           "request": {
             "auth": {
               "type": "noauth"
             },
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "localhost:8080/api/v1/admin/resource",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "resource"
-              ]
-            }
+            "header": []
           },
           "response": []
         },
         {
-          "name": "logout",
+          "name": "Logout",
           "request": {
             "auth": {
               "type": "noauth"
             },
             "method": "POST",
             "header": [],
-            "url": {
-              "raw": "localhost:8080/api/v1/auth/logout",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "logout"
-              ]
-            }
+            "url": "{{baseUrl}}/api/v1/auth/logout"
           },
           "response": []
         },
         {
-          "name": "login/authenticate",
+          "name": "Authenticate",
           "request": {
             "auth": {
               "type": "noauth"
             },
             "method": "POST",
-            "header": [],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"email\": \"student1@example.com\",\r\n    \"password\": \"StrongP@ssw0rd!\"\r\n}",
+              "raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"{{password}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "url": {
-              "raw": "localhost:8080/api/v1/auth/authenticate",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "authenticate"
-              ]
-            }
+            "url": "{{baseUrl}}/api/v1/auth/authenticate"
           },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('authenticate: status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.test('authenticate: returns access_token', function () {",
+                  "  pm.expect(json).to.have.property('access_token');",
+                  "  pm.expect(json.access_token).to.be.a('string');",
+                  "  pm.expect(json.access_token.length).to.be.greaterThan(10);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('token', json.access_token);"
+                ]
+              }
+            }
+          ],
           "response": []
         },
         {
-          "name": "user resource",
+          "name": "Logout (optional cleanup)",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
+            "auth": { "type": "noauth" },
             "method": "POST",
             "header": [],
+            "url": "{{baseUrl}}/api/v1/auth/logout"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('logout: status is 200/204', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.unset('token');"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Links",
+      "item": [
+        {
+          "name": "Shorten (public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\r\n  \"originalUrl\": \"https://example.com\"\r\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "localhost:8080/api/v1/user/resource",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "v1",
-                "user",
-                "resource"
-              ]
-            }
+            "url": "{{baseUrl}}/api/v1/shorten"
           },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('shorten: status is 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.test('shorten: returns shortCode and originalUrl', function () {",
+                  "  pm.expect(json.shortCode).to.be.a('string');",
+                  "  pm.expect(json.originalUrl).to.eql('https://example.com');",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('shortCode', json.shortCode);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Resolve (public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/resolve/{{shortCode}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('resolve: status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.test('resolve: returns originalUrl', function () {",
+                  "  pm.expect(json.originalUrl).to.be.a('string');",
+                  "  pm.expect(json.originalUrl.length).to.be.greaterThan(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Dashboard (auth required)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('dashboard: status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.test('dashboard: returns links array', function () {",
+                  "  pm.expect(json).to.have.property('links');",
+                  "  pm.expect(json.links).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Stats (auth + owner required)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/stats/{{shortCode}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('stats: status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.test('stats: returns clickCount and shortCode', function () {",
+                  "  pm.expect(json.shortCode).to.be.a('string');",
+                  "  pm.expect(json).to.have.property('clickCount');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Disable link (auth + owner required)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"disabled\": true\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/v1/links/{{shortCode}}/disabled"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('disable: status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.test('disable: link is disabled', function () {",
+                  "  pm.expect(json.disabled).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Redirect (public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/{{shortCode}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirect: status is 302 or 404 (if disabled)', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([302, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "response": []
         }
       ]
