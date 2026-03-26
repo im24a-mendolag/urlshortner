@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import api from '../api/axios';
 
-const RESERVED_CODES = new Set(['login', 'register', 'dashboard', 'api']);
 type RedirectState = 'loading' | 'not_found' | 'error';
 
 const ShortCodeRedirect: React.FC = () => {
@@ -12,7 +11,7 @@ const ShortCodeRedirect: React.FC = () => {
   const [message, setMessage] = useState<string>('Redirecting to your destination...');
 
   useEffect(() => {
-    if (!code || RESERVED_CODES.has(code)) {
+    if (!code) {
       setState('not_found');
       setMessage('That short link does not exist.');
       return;

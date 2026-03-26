@@ -15,7 +15,7 @@ public class RedirectController {
 
     private final LinkService linkService;
 
-    @GetMapping("/{code}")
+    @GetMapping("/s/{code}")
     public ResponseEntity<Void> redirect(@PathVariable String code, HttpServletRequest request) {
         String originalUrl = linkService.resolveAndTrackRedirect(code, request);
         return ResponseEntity.status(HttpStatus.FOUND)

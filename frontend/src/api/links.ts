@@ -64,7 +64,7 @@ const getApiOrigin = () => {
 export const buildShortUrlFromCode = (shortCode: string) => {
   const configuredBase = import.meta.env.VITE_SHORT_BASE_URL;
   const base = configuredBase ? removeTrailingSlash(configuredBase) : getApiOrigin();
-  return `${base}/${shortCode}`;
+  return `${base}/s/${shortCode}`;
 };
 
 const SHORTEN_ENDPOINT = import.meta.env.VITE_SHORTEN_ENDPOINT ?? '/api/v1/shorten';

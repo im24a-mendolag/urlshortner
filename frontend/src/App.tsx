@@ -78,7 +78,7 @@ function App() {
 
         {/* Public short-code route for redirecting short links. */}
         <Route
-          path="/:code"
+          path="/s/:code"
           element={<ShortCodeRedirect />}
         />
       </Routes>

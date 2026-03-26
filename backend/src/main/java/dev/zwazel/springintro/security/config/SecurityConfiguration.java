@@ -91,7 +91,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/error", "/api/v1/auth/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/shorten").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/resolve/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/{code}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/s/**").permitAll()
                                 .anyRequest().authenticated())
                 // STEP 4: Use stateless session policy (no server-side sessions)
                 // Each request is independent; state is in JWT token only
