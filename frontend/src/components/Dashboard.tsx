@@ -23,6 +23,7 @@ const Dashboard: React.FC = () => {
   const [isLoadingLinks, setIsLoadingLinks] = useState(false);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [createdLink, setCreatedLink] = useState<LinkItem | null>(null);
+  const [createdLinkUrlExpanded, setCreatedLinkUrlExpanded] = useState(false);
   const [selectedStats, setSelectedStats] = useState<LinkStats | null>(null);
   const [statsCode, setStatsCode] = useState<string | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -101,6 +102,7 @@ const Dashboard: React.FC = () => {
     try {
       const created = await createShortLink({ originalUrl: value });
       setCreatedLink(created);
+      setCreatedLinkUrlExpanded(false);
       setOriginalUrl('');
       setLinks((current) => [created, ...current.filter((item) => item.shortCode !== created.shortCode)]);
       setInfoMessage('Short link created successfully.');
@@ -235,7 +237,19 @@ const Dashboard: React.FC = () => {
             >
               {createdLink.shortUrl}
             </a>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 break-all">{createdLink.originalUrl}</p>
+            {createdLink.originalUrl.length > 80 ? (
+              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 break-all">
+                {createdLinkUrlExpanded ? createdLink.originalUrl : `${createdLink.originalUrl.slice(0, 80)}…`}
+                <button
+                  onClick={() => setCreatedLinkUrlExpanded((v) => !v)}
+                  className="ml-1 text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {createdLinkUrlExpanded ? 'less' : 'more'}
+                </button>
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 break-all">{createdLink.originalUrl}</p>
+            )}
             <div className="mt-3 flex gap-3">
               <button
                 onClick={() => void handleCopyShortUrl(createdLink.shortUrl)}
