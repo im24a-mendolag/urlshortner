@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -27,8 +27,26 @@ const Dashboard: React.FC = () => {
   const [statsCode, setStatsCode] = useState<string | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [toggleInProgressCode, setToggleInProgressCode] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [expandedUrls, setExpandedUrls] = useState<Set<string>>(new Set());
+
+  const toggleUrlExpanded = (code: string) => {
+    setExpandedUrls((prev) => {
+      const next = new Set(prev);
+      next.has(code) ? next.delete(code) : next.add(code);
+      return next;
+    });
+  };
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (message: string, type: 'error' | 'info') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  };
+
+  const setError = (msg: string | null) => { if (msg) showToast(msg, 'error'); };
+  const setInfoMessage = (msg: string | null) => { if (msg) showToast(msg, 'info'); };
 
   useEffect(() => {
     void loadLinks();
@@ -108,7 +126,22 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const formatDate = (value: string | null) => {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  };
+
   const handleLoadStats = async (code: string) => {
+    if (statsCode === code && selectedStats) {
+      setStatsCode(null);
+      setSelectedStats(null);
+      return;
+    }
     setStatsLoading(true);
     setStatsCode(code);
     setSelectedStats(null);
@@ -261,7 +294,19 @@ const Dashboard: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 break-all">{item.originalUrl}</p>
+                  {item.originalUrl.length > 80 ? (
+                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 break-all">
+                      {expandedUrls.has(item.shortCode) ? item.originalUrl : `${item.originalUrl.slice(0, 80)}…`}
+                      <button
+                        onClick={() => toggleUrlExpanded(item.shortCode)}
+                        className="ml-1 text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {expandedUrls.has(item.shortCode) ? 'less' : 'more'}
+                      </button>
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 break-all">{item.originalUrl}</p>
+                  )}
                   <div className="mt-3 flex gap-3">
                     <button
                       onClick={() => void handleCopyShortUrl(item.shortUrl)}
@@ -273,7 +318,7 @@ const Dashboard: React.FC = () => {
                       onClick={() => void handleLoadStats(item.shortCode)}
                       className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
                     >
-                      View stats
+                      {statsCode === item.shortCode && selectedStats ? 'Hide stats' : 'View stats'}
                     </button>
                     <button
                       onClick={() => void handleToggleDisabled(item)}
@@ -287,31 +332,35 @@ const Dashboard: React.FC = () => {
                           : 'Disable'}
                     </button>
                   </div>
+                  {statsCode === item.shortCode && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                      {statsLoading ? (
+                        <p className="text-gray-500 dark:text-gray-400">Loading stats...</p>
+                      ) : selectedStats ? (
+                        <div className="flex flex-wrap gap-x-6 gap-y-1">
+                          <span><span className="font-semibold">Clicks:</span> {selectedStats.clickCount}</span>
+                          <span><span className="font-semibold">First click:</span> {formatDate(selectedStats.firstClickAt)}</span>
+                          <span><span className="font-semibold">Last click:</span> {formatDate(selectedStats.lastClickAt)}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-800 min-h-[120px]">
-          <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Stats / Status</h4>
-          {statsLoading && <p className="text-gray-500 dark:text-gray-400">Loading stats for {statsCode}...</p>}
-          {selectedStats && (
-            <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-              <p><span className="font-semibold">Code:</span> {selectedStats.shortCode}</p>
-              <p><span className="font-semibold">Clicks:</span> {selectedStats.clickCount}</p>
-              <p><span className="font-semibold">First click:</span> {selectedStats.firstClickAt ?? '-'}</p>
-              <p><span className="font-semibold">Last click:</span> {selectedStats.lastClickAt ?? '-'}</p>
-            </div>
-          )}
-          {infoMessage && <p className="text-sm font-medium text-green-600 dark:text-green-300">{infoMessage}</p>}
-          {error && <p className="text-sm font-medium text-red-500">{error}</p>}
-          {!statsLoading && !selectedStats && !infoMessage && !error && (
-            <p className="text-sm italic text-gray-500 dark:text-gray-400">
-              Select a link to view stats, or create a new short link.
-            </p>
-          )}
-        </div>
+        {toast && (
+          <div className={`fixed top-4 right-4 z-50 flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium max-w-sm ${
+            toast.type === 'error'
+              ? 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'
+              : 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+          }`}>
+            <span className="flex-1">{toast.message}</span>
+            <button onClick={() => setToast(null)} className="opacity-60 hover:opacity-100 leading-none">✕</button>
+          </div>
+        )}
       </div>
     </div>
   );
